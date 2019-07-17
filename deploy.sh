@@ -37,10 +37,12 @@ nginx_deploy() {
 	fi
 
 	sudo cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.bak
+
+	sudo cp sites-available/* /etc/nginx/sites-available/
 	
 	echo "cp nginx.conf /etc/nginx.conf"
 	sudo cp nginx.conf /etc/nginx/nginx.conf
-	
+
 	echo "sudo systemctl restart nginx.service"
 	sudo systemctl restart nginx.service
 
