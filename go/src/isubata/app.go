@@ -24,6 +24,7 @@ import (
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/middleware"
 
+    "net"
 	_ "net/http/pprof"
 )
 
@@ -815,6 +816,10 @@ func main() {
 		"add":    tAdd,
 		"xrange": tRange,
 	}
+    l, err := net.Listen("unix", "/tmp/echo.sock")
+    if err != nil {
+        log.Fatal(err)
+    }
 	e.Renderer = &Renderer{
 		templates: template.Must(template.New("").Funcs(funcs).ParseGlob("views/*.html")),
 	}
@@ -844,6 +849,6 @@ func main() {
 	e.GET("add_channel", getAddChannel)
 	e.POST("add_channel", postAddChannel)
 	// e.GET("/icons/:file_name", getIcon)
-
-	e.Start(":5000")
+    e.Listener = l
+	e.Start("")
 }
