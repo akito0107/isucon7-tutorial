@@ -465,7 +465,7 @@ func addMessage(channelID, userID int64, content string) (int64, error) {
                 _, err := db.Exec("INSERT INTO haveread (user_id, channel_id, message_id, updated_at, created_at)"+
                 " VALUES (?, ?, ?, NOW(), NOW())"+
                 " ON DUPLICATE KEY UPDATE message_id = ?, updated_at = NOW()",
-                userID, chanID, res[0].MessageID, res[0].MessageID)
+                userID, chanID, res[len(res)-1].MessageID, res[len(res)-1].MessageID)
                 if err != nil {
                     return err
                 }
