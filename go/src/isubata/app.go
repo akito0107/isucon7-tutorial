@@ -458,7 +458,7 @@ func fetchUnread(c echo.Context) error {
 
     var joinReads []JoinRead
 
-    if err := db.Select(&joinReads, "select channel.id as channel_id, haveread.message_id as message_id from channel right join haveread on channel.id = haveread.channel_id;"); err != nil {
+    if err := db.Select(&joinReads, "select channel.id as channel_id, haveread.message_id as message_id from channel left join haveread on channel.id = haveread.channel_id;"); err != nil {
         return err
     }
 
