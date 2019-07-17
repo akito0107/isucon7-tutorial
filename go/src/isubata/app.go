@@ -382,7 +382,7 @@ func addMessage(channelID, userID int64, content string) (int64, error) {
             sql := "select m.id as message_id, m.content as content, m.created_at," +
             " u.name, u.display_name, u.avatar_icon from" +
             " message m join user u on m.user_id = u.id" +
-            " where m.id > ? and m.channel_id = ? order by m.id ASC limit 100"
+            " where m.id > ? and m.channel_id = ? order by m.id DESC limit 100"
 
             var resultSet []userMessage
             if err := db.Select(&resultSet, sql, lastID, chanID); err != nil {
@@ -437,16 +437,16 @@ func addMessage(channelID, userID int64, content string) (int64, error) {
 
             response := make([]map[string]interface{}, 0, len(res))
 
-            for _, r := range res {
+            for i := len(res) - 1; i >= 0; i-- {
                 m := make(map[string]interface{})
-                m["id"] = r.MessageID
+                m["id"] = res[i].MessageID
                 m["user"] = User{
-                    Name:        r.UserName,
-                    DisplayName: r.DisplayName,
-                    AvatarIcon:  r.AvatarIcon,
+                    Name:        res[i].UserName,
+                    DisplayName: res[i].DisplayName,
+                    AvatarIcon:  res[i].AvatarIcon,
                 }
-                m["date"] = r.MessageCreatedAt.Format("2006/01/02 15:04:05")
-                m["content"] = r.MessageContent
+                m["date"] = res[i].MessageCreatedAt.Format("2006/01/02 15:04:05")
+                m["content"] = res[i].MessageContent
 
                 response = append(response, m)
             }
@@ -465,7 +465,7 @@ func addMessage(channelID, userID int64, content string) (int64, error) {
                 _, err := db.Exec("INSERT INTO haveread (user_id, channel_id, message_id, updated_at, created_at)"+
                 " VALUES (?, ?, ?, NOW(), NOW())"+
                 " ON DUPLICATE KEY UPDATE message_id = ?, updated_at = NOW()",
-                userID, chanID, res[len(res)-1].MessageID, res[len(res)-1].MessageID)
+                userID, chanID, res[0].MessageID, res[0].MessageID)
                 if err != nil {
                     return err
                 }
