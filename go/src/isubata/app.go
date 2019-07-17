@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"html/template"
 	"io"
-	"io/ioutil"
 	"log"
 	"math/rand"
 	"net/http"
@@ -653,7 +652,6 @@ func postProfile(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-		avatarData, _ = ioutil.ReadAll(file)
 		file.Close()
 
 		if len(avatarData) > avatarMaxBytes {
@@ -661,10 +659,14 @@ func postProfile(c echo.Context) error {
 		}
 
 		avatarName = fmt.Sprintf("%x%s", sha1.Sum(avatarData), ext)
+		f, _ := os.Open(fmt.Sprintf("/var/www/images/%s", avatarName))
+		defer f.Close()
+
+		io.Copy(f, file)
 	}
 
 	if avatarName != "" && len(avatarData) > 0 {
-		_, err := db.Exec("INSERT INTO image (name, data) VALUES (?, ?)", avatarName, avatarData)
+		_, err := db.Exec("INSERT INTO image (name) VALUES (?)", avatarName)
 		if err != nil {
 			return err
 		}
