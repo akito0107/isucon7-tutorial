@@ -446,34 +446,46 @@ func fetchUnread(c echo.Context) error {
 
 	time.Sleep(time.Second)
 
-	channels, err := queryChannels()
-	if err != nil {
-		return err
+	// channels, err := queryChannels()
+	// if err != nil {
+	// 	return err
+	// }
+
+	type JoinRead struct {
+		ChannelID int64       `db:"channel_id"`
+		MessageID sql.NullInt64 `db:"message_id"`
 	}
+
+    var joinReads []JoinRead
+
+    if err := db.Select(&joinReads, "select channel.id as channel_id, haveread.message_id as message_id from channel right join haveread on channel.id = haveread.channel_id;"); err != nil {
+        return err
+    }
 
 	resp := []map[string]interface{}{}
 
-	for _, chID := range channels {
-		lastID, err := queryHaveRead(userID, chID)
-		if err != nil {
-			return err
-		}
+	for _, j := range joinReads {
+		// lastID, err := queryHaveRead(userID, chID)
+		// if err != nil {
+		// 	return err
+		// }
 
+        var err error
 		var cnt int64
-		if lastID > 0 {
+		if j.MessageID.Int64 > 0 {
 			err = db.Get(&cnt,
 				"SELECT COUNT(*) as cnt FROM message WHERE channel_id = ? AND ? < id",
-				chID, lastID)
+				j.ChannelID, j.MessageID.Int64)
 		} else {
 			err = db.Get(&cnt,
 				"SELECT COUNT(*) as cnt FROM message WHERE channel_id = ?",
-				chID)
+				j.ChannelID)
 		}
 		if err != nil {
 			return err
 		}
 		r := map[string]interface{}{
-			"channel_id": chID,
+			"channel_id": j.ChannelID,
 			"unread":     cnt}
 		resp = append(resp, r)
 	}
