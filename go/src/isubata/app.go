@@ -380,9 +380,9 @@ func addMessage(channelID, userID int64, content string) (int64, error) {
         func joinedJsonifyMessage(chanID, lastID int64) ([]userMessage, error) {
 
             sql := "select m.id as message_id, m.content as content, m.created_at," +
-            "u.name, u.display_name, u.avatar_icon from" +
-            "message m join user u on m.user_id = u.id" +
-            "where m.id > ? and m.channel_id = ? order by m.id DESC limit 100"
+            " u.name, u.display_name, u.avatar_icon from" +
+            " message m join user u on m.user_id = u.id" +
+            " where m.id > ? and m.channel_id = ? order by m.id DESC limit 100"
 
             var resultSet []userMessage
             if err := db.Select(&resultSet, sql, lastID, chanID); err != nil {
