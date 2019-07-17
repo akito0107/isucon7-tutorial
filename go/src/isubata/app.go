@@ -558,6 +558,32 @@ func fetchUnread(c echo.Context) error {
 	return c.JSON(http.StatusOK, resp)
 }
 
+
+type historyMessage struct {
+	MessageID        int64     `db:"message_id"`
+	MessageContent   string    `db:"content"`
+	MessageCreatedAt time.Time `db:"created_at"`
+	UserName         string    `db:"name"`
+	DisplayName      string    `db:"display_name"`
+	AvatarIcon       string    `db:"avatar_icon"`
+}
+
+func joinedHistoryJsonifyMessage(chanID, limit, offset int64) ([]userMessage, error) {
+
+	sql := "select m.id as message_id, m.content as content, m.created_at," +
+		" u.name, u.display_name, u.avatar_icon from" +
+		" message m join user u on m.user_id = u.id" +
+		" where m.channel_id = ? order by m.id DESC limit ? OFFSET ?"
+
+	var resultSet []userMessage
+	if err := db.Select(&resultSet, sql,  chanID, limit, offset); err != nil {
+		return nil, err
+	}
+
+	return resultSet, nil
+}
+
+
 func getHistory(c echo.Context) error {
 	chID, err := strconv.ParseInt(c.Param("channel_id"), 10, 64)
 	if err != nil || chID <= 0 {
@@ -582,7 +608,7 @@ func getHistory(c echo.Context) error {
 
 	const N = 20
 	var cnt int64
-	err = db.Get(&cnt, "SELECT COUNT(*) as cnt FROM message WHERE channel_id = ?", chID)
+	err = db.Get(&cnt, "SELECT COUNT(id) as cnt FROM message WHERE channel_id = ?", chID)
 	if err != nil {
 		return err
 	}
@@ -594,22 +620,42 @@ func getHistory(c echo.Context) error {
 		return ErrBadReqeust
 	}
 
-	messages := []Message{}
-	err = db.Select(&messages,
-		"SELECT * FROM message WHERE channel_id = ? ORDER BY id DESC LIMIT ? OFFSET ?",
-		chID, N, (page-1)*N)
-	if err != nil {
-		return err
+    res, err := joinedHistoryJsonifyMessage(chID, N, (page-1)*N)
+    if err != nil {
+        return err
+    }
+
+	// messages := []Message{}
+	// err = db.Select(&messages,
+	// 	"SELECT * FROM message WHERE channel_id = ? ORDER BY id DESC LIMIT ? OFFSET ?",
+	// 	chID, N, (page-1)*N)
+	// if err != nil {
+	// 	return err
+	// }
+
+	mjson := make([]map[string]interface{}, 0, len(res))
+
+	for i := len(res) - 1; i >= 0; i-- {
+		m := make(map[string]interface{})
+		m["id"] = res[i].MessageID
+		m["user"] = User{
+			Name:        res[i].UserName,
+			DisplayName: res[i].DisplayName,
+			AvatarIcon:  res[i].AvatarIcon,
+		}
+		m["date"] = res[i].MessageCreatedAt.Format("2006/01/02 15:04:05")
+		m["content"] = res[i].MessageContent
+
+		mjson = append(mjson, m)
 	}
 
-	mjson := make([]map[string]interface{}, 0)
-	for i := len(messages) - 1; i >= 0; i-- {
-		r, err := jsonifyMessage(messages[i])
-		if err != nil {
-			return err
-		}
-		mjson = append(mjson, r)
-	}
+	// for i := len(messages) - 1; i >= 0; i-- {
+	// 	r, err := jsonifyMessage(messages[i])
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// 	mjson = append(mjson, r)
+	// }
 
 	channels := []ChannelInfo{}
 	err = db.Select(&channels, "SELECT * FROM channel ORDER BY id")
