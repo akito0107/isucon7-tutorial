@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	crand "crypto/rand"
 	"crypto/sha1"
 	"database/sql"
@@ -629,8 +630,8 @@ func postProfile(c echo.Context) error {
 	}
 
 	avatarName := ""
-	var avatarData []byte
 
+	var buf bytes.Buffer
 	if fh, err := c.FormFile("avatar_icon"); err == http.ErrMissingFile {
 		// no file upload
 	} else if err != nil {
@@ -652,20 +653,21 @@ func postProfile(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-		file.Close()
+		defer file.Close()
+		io.Copy(&buf, file)
 
-		if len(avatarData) > avatarMaxBytes {
+		if buf.Len() > avatarMaxBytes {
 			return ErrBadReqeust
 		}
 
-		avatarName = fmt.Sprintf("%x%s", sha1.Sum(avatarData), ext)
+		avatarName = fmt.Sprintf("%x%s", sha1.Sum(buf.Bytes()), ext)
 		f, _ := os.Open(fmt.Sprintf("/var/www/images/icons/%s", avatarName))
 		defer f.Close()
 
-		io.Copy(f, file)
+		io.Copy(f, &buf)
 	}
 
-	if avatarName != "" && len(avatarData) > 0 {
+	if avatarName != "" && buf.Len() > 0 {
 		_, err := db.Exec("INSERT INTO image (name) VALUES (?)", avatarName)
 		if err != nil {
 			return err
