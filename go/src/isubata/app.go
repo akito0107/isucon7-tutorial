@@ -659,7 +659,7 @@ func postProfile(c echo.Context) error {
 		}
 
 		avatarName = fmt.Sprintf("%x%s", sha1.Sum(avatarData), ext)
-		f, _ := os.Open(fmt.Sprintf("/var/www/images/%s", avatarName))
+		f, _ := os.Open(fmt.Sprintf("/var/www/images/icons/%s", avatarName))
 		defer f.Close()
 
 		io.Copy(f, file)
