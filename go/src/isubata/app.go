@@ -816,6 +816,7 @@ func main() {
 		"add":    tAdd,
 		"xrange": tRange,
 	}
+	os.Remove("/tmp/echo.sock")
     l, err := net.Listen("unix", "/tmp/echo.sock")
     if err != nil {
         log.Fatal(err)
@@ -849,6 +850,6 @@ func main() {
 	e.GET("add_channel", getAddChannel)
 	e.POST("add_channel", postAddChannel)
 	// e.GET("/icons/:file_name", getIcon)
-    e.Listener = l
+    	e.Listener = l
 	e.Start("")
 }

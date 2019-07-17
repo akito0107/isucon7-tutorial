@@ -5,7 +5,7 @@ GO_WEBAPP_BACKUP=$HOME/go_backup
 echo "WEBAPP ROOT"${GO_WEBAPP_ROOT}
 
 echo 'git pull'
-git pull origin master
+# git pull origin master
 
 golang_deploy() {
 	if test -e ${GO_WEBAPP_BACKUP}; then
@@ -25,7 +25,9 @@ golang_deploy() {
 	make
 	
 	echo "sudo systemctl restart isubata.golang.service"
+	sudo rm /tmp/echo.sock
 	sudo systemctl restart isubata.golang.service
+	sudo chown www-data:www-data /tmp/echo.sock
 	
 	echo "golang deploy done"
 }
