@@ -435,7 +435,7 @@ func addMessage(channelID, userID int64, content string) (int64, error) {
                 return err
             }
 
-            response := make([]map[string]interface{}, len(res))
+            response := make([]map[string]interface{}, 0, len(res))
 
             for _, r := range res {
                 m := make(map[string]interface{})
