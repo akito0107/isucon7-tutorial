@@ -67,8 +67,8 @@ func init() {
 		db_password = ":" + db_password
 	}
 
-	dsn := fmt.Sprintf("%s%s@tcp(%s:%s)/isubata?parseTime=true&loc=Local&charset=utf8mb4",
-		db_user, db_password, db_host, db_port)
+	dsn := fmt.Sprintf("%s%s@unix(/var/run/mysqld/mysqld.sock)/isubata?parseTime=true&loc=Local&charset=utf8mb4",
+		db_user, db_password)
 
 	log.Printf("Connecting to db: %q", dsn)
 	db, _ = sqlx.Connect("mysql", dsn)
