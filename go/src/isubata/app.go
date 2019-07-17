@@ -737,10 +737,12 @@ func addMessage(channelID, userID int64, content string) (int64, error) {
                         }
 
                         avatarName = fmt.Sprintf("%x%s", sha1.Sum(buf.Bytes()), ext)
-                        f, _ := os.Open(fmt.Sprintf("/var/www/images/icons/%s", avatarName))
-                        defer f.Close()
-
-                        io.Copy(f, &buf)
+                        pathname := fmt.Sprintf("/var/www/images/icons/%s", avatarName)
+                        if _, err := os.Stat(pathname); os.IsNotExist(err) {
+                            f, _ := os.Create(pathname)
+                            defer f.Close()
+                            io.Copy(f, &buf)
+                        }
                     }
 
                     if avatarName != "" && buf.Len() > 0 {
