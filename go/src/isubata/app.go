@@ -24,7 +24,7 @@ import (
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/middleware"
 
-    "net"
+	"net"
 	_ "net/http/pprof"
 )
 
@@ -68,8 +68,8 @@ func init() {
 	}
 
 	// dsn := fmt.Sprintf("%s%s@unix(/var/run/mysqld/mysqld.sock)/isubata?parseTime=true&loc=Local&charset=utf8mb4",
-		//db_user, db_password)
-    dsn := fmt.Sprintf("%s%s@tcp(%s:%s)/isubata?parseTime=true&loc=Local&charset=utf8mb4",
+	//db_user, db_password)
+	dsn := fmt.Sprintf("%s%s@tcp(%s:%s)/isubata?parseTime=true&loc=Local&charset=utf8mb4",
 		db_user, db_password, db_host, db_port)
 
 	log.Printf("Connecting to db: %q", dsn)
@@ -560,7 +560,6 @@ func fetchUnread(c echo.Context) error {
 	return c.JSON(http.StatusOK, resp)
 }
 
-
 type historyMessage struct {
 	MessageID        int64     `db:"message_id"`
 	MessageContent   string    `db:"content"`
@@ -578,13 +577,12 @@ func joinedHistoryJsonifyMessage(chanID, limit, offset int64) ([]userMessage, er
 		" where m.channel_id = ? order by m.id DESC limit ? OFFSET ?"
 
 	var resultSet []userMessage
-	if err := db.Select(&resultSet, sql,  chanID, limit, offset); err != nil {
+	if err := db.Select(&resultSet, sql, chanID, limit, offset); err != nil {
 		return nil, err
 	}
 
 	return resultSet, nil
 }
-
 
 func getHistory(c echo.Context) error {
 	chID, err := strconv.ParseInt(c.Param("channel_id"), 10, 64)
@@ -622,10 +620,10 @@ func getHistory(c echo.Context) error {
 		return ErrBadReqeust
 	}
 
-    res, err := joinedHistoryJsonifyMessage(chID, N, (page-1)*N)
-    if err != nil {
-        return err
-    }
+	res, err := joinedHistoryJsonifyMessage(chID, N, (page-1)*N)
+	if err != nil {
+		return err
+	}
 
 	// messages := []Message{}
 	// err = db.Select(&messages,
@@ -757,9 +755,9 @@ func postProfile(c echo.Context) error {
 	avatarName := ""
 
 	var buf bytes.Buffer
-    if err := c.Request().ParseMultipartForm(avatarMaxBytes + 1024 * 1024); err != nil {
-        return err
-    }
+	if err := c.Request().ParseMultipartForm(avatarMaxBytes + 1024*1024); err != nil {
+		return err
+	}
 
 	if f, fh, err := c.Request().FormFile("avatar_icon"); err == http.ErrMissingFile {
 		// no file upload
@@ -861,10 +859,10 @@ func main() {
 		"xrange": tRange,
 	}
 	os.Remove("/tmp/echo.sock")
-    l, err := net.Listen("unix", "/tmp/echo.sock")
-    if err != nil {
-        log.Fatal(err)
-    }
+	l, err := net.Listen("unix", "/tmp/echo.sock")
+	if err != nil {
+		log.Fatal(err)
+	}
 	e.Renderer = &Renderer{
 		templates: template.Must(template.New("").Funcs(funcs).ParseGlob("views/*.html")),
 	}
@@ -894,6 +892,8 @@ func main() {
 	e.GET("add_channel", getAddChannel)
 	e.POST("add_channel", postAddChannel)
 	// e.GET("/icons/:file_name", getIcon)
-    	e.Listener = l
+	e.Server.ReadTimeout = 1 * time.Second
+	e.Server.WriteTimeout = 1 * time.Second
+	e.Listener = l
 	e.Start("")
 }
