@@ -48,7 +48,7 @@ func (r *Renderer) Render(w io.Writer, name string, data interface{}, c echo.Con
 }
 
 func init() {
-    uploadchan = make(chan struct{}, 10)
+    	uploadchan = make(chan struct{}, 1)
 	seedBuf := make([]byte, 8)
 	crand.Read(seedBuf)
 	rand.Seed(int64(binary.LittleEndian.Uint64(seedBuf)))
@@ -514,7 +514,7 @@ func fetchUnread(c echo.Context) error {
 		return c.NoContent(http.StatusForbidden)
 	}
 
-	time.Sleep(time.Second)
+	time.Sleep(time.Second * 2)
 
 	// channels, err := queryChannels()
 	// if err != nil {
@@ -752,9 +752,9 @@ func postAddChannel(c echo.Context) error {
 
 
 func postProfile(c echo.Context) error {
-    <-uploadchan
+    uploadchan<-struct{}{}
     defer func() {
-        uploadchan<-struct{}{}
+        <-uploadchan
     }()
 
 	self, err := ensureLogin(c)
@@ -765,7 +765,7 @@ func postProfile(c echo.Context) error {
 	avatarName := ""
 
 	var buf bytes.Buffer
-	if err := c.Request().ParseMultipartForm(avatarMaxBytes + 1024*1024); err != nil {
+	if err := c.Request().ParseMultipartForm(avatarMaxBytes + 1024); err != nil {
 		return err
 	}
 
