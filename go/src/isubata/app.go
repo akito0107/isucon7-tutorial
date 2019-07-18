@@ -37,6 +37,8 @@ var (
 	ErrBadReqeust = echo.NewHTTPError(http.StatusBadRequest)
 )
 
+var uploadchan chan struct{}
+
 type Renderer struct {
 	templates *template.Template
 }
@@ -46,6 +48,7 @@ func (r *Renderer) Render(w io.Writer, name string, data interface{}, c echo.Con
 }
 
 func init() {
+    uploadchan = make(chan struct{}, 10)
 	seedBuf := make([]byte, 8)
 	crand.Read(seedBuf)
 	rand.Seed(int64(binary.LittleEndian.Uint64(seedBuf)))
@@ -747,7 +750,13 @@ func postAddChannel(c echo.Context) error {
 		fmt.Sprintf("/channel/%v", lastID))
 }
 
+
 func postProfile(c echo.Context) error {
+    <-uploadchan
+    defer func() {
+        uploadchan<-struct{}{}
+    }()
+
 	self, err := ensureLogin(c)
 	if self == nil {
 		return err
