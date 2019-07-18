@@ -892,8 +892,8 @@ func main() {
 	e.GET("add_channel", getAddChannel)
 	e.POST("add_channel", postAddChannel)
 	// e.GET("/icons/:file_name", getIcon)
-	e.Server.ReadTimeout = 1 * time.Second
-	e.Server.WriteTimeout = 1 * time.Second
+	e.Server.ReadTimeout = 5 * time.Second
+	e.Server.WriteTimeout = 5 * time.Second
 	e.Listener = l
 	e.Start("")
 }
