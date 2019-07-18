@@ -755,7 +755,11 @@ func postProfile(c echo.Context) error {
 	avatarName := ""
 
 	var buf bytes.Buffer
-	if fh, err := c.FormFile("avatar_icon"); err == http.ErrMissingFile {
+    if err := c.Request().ParseMultipartForm(avatarMaxBytes + 1024 * 1024); err != nil {
+        return err
+    }
+
+	if f, fh, err := c.Request().FormFile("avatar_icon"); err == http.ErrMissingFile {
 		// no file upload
 	} else if err != nil {
 		return err
@@ -772,12 +776,8 @@ func postProfile(c echo.Context) error {
 			return ErrBadReqeust
 		}
 
-		file, err := fh.Open()
-		if err != nil {
-			return err
-		}
-		defer file.Close()
-		io.Copy(&buf, file)
+		defer f.Close()
+		io.Copy(&buf, f)
 
 		if buf.Len() > avatarMaxBytes {
 			return ErrBadReqeust
